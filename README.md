@@ -67,7 +67,7 @@ It consists of 2 parts: PS2 code patches and PC side memory manipulation
 
 On the PS2 side - it firstly patches the game code to expose the pointer for the camera matrix at a known memory location. This is done by caving some extra code hooks into the empty/unused areas in the executable.
 
-Then, it also adds a toggle switch to the camera matrix updater. This has to be done on the PS2 side because the code is JIT-ed/recompiled and then cached on PCSX2, so patching the code during runtime won't work.
+Then, it also adds a toggle switch to the camera matrix updater. This has to be done on the PS2 side because the code is JIT-ed/recompiled and then cached on PCSX2, so patching the code during runtime won't work (unless the recompiler cache is reset).
 
 And lastly, as a simple and easy checkpoint when the camera should stop existing, I've added a check against the destructor of the "RaceCourse" object. This only happens when it's exiting an active race.
 
