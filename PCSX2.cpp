@@ -67,11 +67,11 @@ namespace PCSX2
 
 	int Launch(std::filesystem::path exePath)
 	{
-        STARTUPINFOA si = { 0 };
+        STARTUPINFOW si = { 0 };
         si.cb = sizeof(si);
 
-        if (!CreateProcessA(
-            exePath.string().c_str(),
+        if (!CreateProcessW(
+            exePath.wstring().c_str(),
             nullptr,
             nullptr, nullptr,
             FALSE,
