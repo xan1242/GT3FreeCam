@@ -45,7 +45,7 @@ Controls are similar to Black Box's debug camera controls.
 
 You can press the R (or Start + B) button to reset all of the camera rotations.
 
-You can mitigate its effect slightly by setting the rounding mode to "Nearest" and clamping mode to "Normal" on VU0.
+You can mitigate the tilting/rolling effect slightly by setting the rounding mode to "Nearest" and clamping mode to "Normal" on VU0.
 
 - Try to avoid looking up/down and only look left/right to avoid any weirdness regarding tilting.
 - Controllers are read **independently** of PCSX2. They're read on the PC side via XInput (on port 2).
