@@ -45,6 +45,8 @@ public:
 
     // Apply yaw/pitch to the view matrix
     void RotateView(float yawDelta, float pitchDelta, float rollDelta);
+
+    void Print(char* buffer);
 };
 
 #endif

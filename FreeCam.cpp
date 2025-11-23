@@ -17,6 +17,7 @@ namespace FreeCam
 
 		constexpr uint32_t vkToggle = VK_BACK;
 		constexpr uint32_t vkTurbo = VK_LSHIFT;
+        constexpr uint32_t vkResetRot = 'R';
 		constexpr uint32_t vkSuperTurbo = 'F';
 		constexpr uint32_t vkForwards = 'W';
 		constexpr uint32_t vkBackwards = 'S';
@@ -57,6 +58,8 @@ namespace FreeCam
         {
             ControlPacket out = { 0 };
             float movementVal = 1.0f;
+            constexpr float lookAmount = 0.03f;
+            constexpr float tiltAmount = 0.01f;
 
             if (GetAsyncKeyDown(vkTurbo))
             {
@@ -100,32 +103,37 @@ namespace FreeCam
 
             if (GetAsyncKeyDown(vkLookUp))
             {
-                out.pitchVal += 0.03f;
+                out.pitchVal += lookAmount;
             }
 
             if (GetAsyncKeyDown(vkLookDown))
             {
-                out.pitchVal -= 0.03f;
+                out.pitchVal -= lookAmount;
             }
 
             if (GetAsyncKeyDown(vkLookLeft))
             {
-                out.yawVal += 0.03f;
+                out.yawVal += lookAmount;
             }
 
             if (GetAsyncKeyDown(vkLookRight))
             {
-                out.yawVal -= 0.03f;
+                out.yawVal -= lookAmount;
             }
 
             if (GetAsyncKeyDown(vkTiltClockwise))
             {
-                out.rollVal -= 0.01f;
+                out.rollVal -= tiltAmount;
             }
 
             if (GetAsyncKeyDown(vkTiltCounterclockwise))
             {
-                out.rollVal += 0.01f;
+                out.rollVal += tiltAmount;
+            }
+
+            if (GetAsyncKeyDown(vkResetRot))
+            {
+                out.bResetRot = true;
             }
 
             return out;
@@ -159,60 +167,70 @@ namespace FreeCam
 
         ControlPacket GetControllerValues()
         {
+            constexpr float lookAmountDigital = 0.03f;
+            constexpr float lookAmountAnalog = 0.04f;
+            constexpr float tiltAmount = 0.01f;
+            constexpr float movementAmount = 1.0f;
+
             ControlPacket out = { 0 };
             if (!GetControllerPresence())
                 return out;
             
-            out.movementValX = static_cast<float>(xiState.Gamepad.sThumbLX) / static_cast<float>(std::numeric_limits<SHORT>::max());
-            out.movementValZ = static_cast<float>(xiState.Gamepad.sThumbLY) / static_cast<float>(std::numeric_limits<SHORT>::max());
+            out.movementValX = static_cast<float>(xiState.Gamepad.sThumbLX) / static_cast<float>(std::numeric_limits<SHORT>::max()) * movementAmount;
+            out.movementValZ = static_cast<float>(xiState.Gamepad.sThumbLY) / static_cast<float>(std::numeric_limits<SHORT>::max()) * movementAmount;
 
             if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_START)
             {
-                out.rollVal += (static_cast<float>(xiState.Gamepad.bRightTrigger) / 255.0f) * 0.01f;
-                out.rollVal -= (static_cast<float>(xiState.Gamepad.bLeftTrigger) / 255.0f) * 0.01f;
+                out.rollVal += (static_cast<float>(xiState.Gamepad.bRightTrigger) / 255.0f) * tiltAmount;
+                out.rollVal -= (static_cast<float>(xiState.Gamepad.bLeftTrigger) / 255.0f) * tiltAmount;
             }
             else
             {
                 out.movementValY = (static_cast<float>(xiState.Gamepad.bRightTrigger) / 255.0f) - (static_cast<float>(xiState.Gamepad.bLeftTrigger) / 255.0f);
             }
 
-            out.yawVal = static_cast<float>(xiState.Gamepad.sThumbRX) / static_cast<float>(std::numeric_limits<SHORT>::max()) * -0.04f;
-            out.pitchVal = static_cast<float>(xiState.Gamepad.sThumbRY) / static_cast<float>(std::numeric_limits<SHORT>::max()) * 0.04f;
+            out.yawVal = static_cast<float>(xiState.Gamepad.sThumbRX) / static_cast<float>(std::numeric_limits<SHORT>::max()) * -lookAmountAnalog;
+            out.pitchVal = static_cast<float>(xiState.Gamepad.sThumbRY) / static_cast<float>(std::numeric_limits<SHORT>::max()) * lookAmountAnalog;
 
             if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_A)
             {
-                out.movementValZ = 1.0f;
+                out.movementValZ = movementAmount;
             }
             else if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_Y)
             {
-                out.movementValZ = -1.0f;
+                out.movementValZ = -movementAmount;
             }
 
             if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_B)
             {
-                out.movementValX = 1.0f;
+                if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_START)
+                {
+                    out.bResetRot = true;
+                }
+                else
+                    out.movementValX = movementAmount;
             }
             else if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_X)
             {
-                out.movementValX = -1.0f;
+                out.movementValX = -movementAmount;
             }
 
             if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT)
             {
-                out.yawVal = 0.03f;
+                out.yawVal = lookAmountDigital;
             }
             else if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT)
             {
-                out.yawVal = -0.03f;
+                out.yawVal = -lookAmountDigital;
             }
 
             if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP)
             {
-                out.pitchVal = 0.03f;
+                out.pitchVal = lookAmountDigital;
             }
             else if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN)
             {
-                out.pitchVal = -0.03f;
+                out.pitchVal = -lookAmountDigital;
             }
 
             if (xiState.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER)
@@ -274,6 +292,10 @@ namespace FreeCam
         constexpr uint32_t pToggleDisableUpdateCode_Entrypoint = 0x1FFFD8;
         constexpr uint32_t pToggleDisableUpdate = 0x33748C;
 
+        //constexpr uint32_t pProjMatrixHookEP = 0x25566C;
+        //constexpr uint32_t pProjMatrixHookLoc = 0x339388;
+        //constexpr uint32_t pProjMatrix = 0x337620;
+
         //
         // void Scan();
         //
@@ -298,6 +320,7 @@ namespace FreeCam
             uintptr_t CodeBase = Addresses::pOnBoardCameraHook;
             uintptr_t DestructorBase = Addresses::pRaceCourseDestructorHook;
             uintptr_t ToggleCodeBase = Addresses::pToggleDisableUpdateCodeHook;
+            //uintptr_t ProjMatHookBase = Addresses::pProjMatrixHookLoc;
 
             // code for setting the OnBoardCamera's matrix pointer
             constexpr const uint32_t instructions[] =
@@ -333,6 +356,22 @@ namespace FreeCam
                 0x00000000,    // nop                            
             };
 
+            //constexpr const uint32_t instructions_projmat[] =
+            //{
+            //    0x27BDFFF0,    // addiu sp, -0x10     
+            //    0xFFBF0000,    // sd ra, 0(sp)        
+            //    0x0C095F65,    // jal 0x257D94        
+            //    0x00000000,    // nop                 
+            //    0x00802821,    // move a1, a0         
+            //    0x24060040,    // li a2, 0x40         
+            //    0x3C040033,    // lui a0, 0x33        
+            //    0x0C09F664,    // jal 0x27D990        
+            //    0x24847620,    // addiu a0, a0, 0x7620
+            //    0xDFBF0000,    // ld ra, 0(sp)        
+            //    0x03E00008,    // jr ra               
+            //    0x27BD0010,    // addiu sp, 0x10      
+            //};
+
             PCSX2::VM::Write<uint32_t>(Addresses::ppOnBoardCamera, 0);
             PCSX2::VM::Write<uint32_t>(Addresses::pToggleDisableUpdate, 0);
 
@@ -354,10 +393,17 @@ namespace FreeCam
                 ToggleCodeBase += sizeof(uint32_t);
             }
 
+            //for (int i = 0; i < _countof(instructions_projmat); i++)
+            //{
+            //    PCSX2::VM::Write<uint32_t>(ProjMatHookBase, instructions_projmat[i]);
+            //    ProjMatHookBase += sizeof(uint32_t);
+            //}
+
             // entrypoints
             PCSX2::VM::Write<uint32_t>(Addresses::pOnBoardCamera_Entrypoint, 0x0C0CDDAA); // jal OnBoardCameraHook
             PCSX2::VM::Write<uint32_t>(Addresses::pRaceCourseDestructor_Entrypoint, Addresses::pRaceCourseDestructorHook);
             PCSX2::VM::Write<uint32_t>(Addresses::pToggleDisableUpdateCode_Entrypoint, 0x0C0CDEA8); // jal ToggleDisableUpdateCodeHook
+            //PCSX2::VM::Write<uint32_t>(Addresses::pProjMatrixHookEP, 0x0C0CE4E2); // jal pProjMatrixHookLoc
 
             return true;
 		}
@@ -399,6 +445,27 @@ namespace FreeCam
         return retVal;
     }
 
+    uint32_t GetWorldMatrixAddr()
+    {
+        uint32_t retVal = GetMatrixAddr();
+
+        if (retVal != 0)
+            retVal += sizeof(Matrix4);
+
+        return retVal;
+    }
+
+    //uint32_t GetProjMatrixAddr()
+    //{
+    //    constexpr uint32_t defaultValue = 0x67393251;
+    //    uint32_t val = PCSX2::VM::Read<uint32_t>(Addresses::pProjMatrix);
+    //
+    //    if (val == defaultValue)
+    //        val = 0;
+    //
+    //    return Addresses::pProjMatrix;
+    //}
+
     bool GetCameraMatrix(Matrix4& out, uint32_t inPS2Addr)
     {
 
@@ -433,6 +500,21 @@ namespace FreeCam
         mat.m[3][2] += pkt.movementValZ;
         mat.m[3][1] -= pkt.movementValY;
 
-        mat.RotateView(pkt.yawVal, pkt.pitchVal, pkt.rollVal);
+
+
+        if (pkt.bResetRot)
+        {
+            Matrix4 worldMat;
+            GetCameraMatrix(worldMat, GetWorldMatrixAddr());
+
+            // we need to use the world movement because it's not correct otherwise...
+            mat.Reset();
+            mat.m[3][0] = -worldMat.m[1][0];
+            mat.m[3][1] = -worldMat.m[1][1];
+            mat.m[3][2] = -worldMat.m[1][2];
+
+        }
+        else
+            mat.RotateView(pkt.yawVal, pkt.pitchVal, pkt.rollVal);
     }
 }

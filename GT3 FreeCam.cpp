@@ -12,9 +12,9 @@
 
 //
 // TODO:
-// - print out the projection matrix
+// - print out the projection matrix -- not _really_ done, it's left commented out for now... try at your own risk :P
 // - dynamic UI toggle when free cam is turned on
-// - figure out if there's a way to get better math, maybe by the means of a world matrix so we can reset the transforms?
+// - figure out if there's a way to get better math, maybe by the means of a world matrix so we can reset the transforms? -- partially done, we can reset the rotations...
 // - configuration file...
 // - sigscanning and support for other versions/variants
 // - ...and other todos scattered around the sources...
@@ -33,6 +33,8 @@
 bool bDestroyedFlag = false;
 
 Matrix4Ex matFreeCam;
+Matrix4Ex matWorld;
+Matrix4Ex matProj;
 char FormatBuffer[128];
 
 std::filesystem::path GetExecutablePathInteractive()
@@ -199,12 +201,31 @@ int main(int argc, char* argv[])
 
         sprintf_s(FormatBuffer, "State: %s", statetxt);
         LineCursor += screen.DrawText(0, LineCursor, FormatBuffer);
-        sprintf_s(FormatBuffer, "View translation : %.4f, %.4f, %.4f", matFreeCam.m[3][0], matFreeCam.m[3][1], matFreeCam.m[3][2]);
+        sprintf_s(FormatBuffer, "View translation: %.4f, %.4f, %.4f", matFreeCam.m[3][0], matFreeCam.m[3][1], matFreeCam.m[3][2]);
         LineCursor += screen.DrawText(0, LineCursor, FormatBuffer);
+
+        uint32_t worldMatAddr = FreeCam::GetWorldMatrixAddr();
+        FreeCam::GetCameraMatrix(matWorld, worldMatAddr);
+        sprintf_s(FormatBuffer, "World Position: %.4f, %.4f, %.4f", matWorld.m[1][0], matWorld.m[1][1], matWorld.m[1][2]);
+        LineCursor += screen.DrawText(0, LineCursor, FormatBuffer) + 1;
+
+        //LineCursor += screen.DrawText(0, LineCursor, "-=-=-= PROJ MATRIX =-=-=-");
+        //
+        //uint32_t projMatAddr = FreeCam::GetProjMatrixAddr();
+        //FreeCam::GetCameraMatrix(matProj, projMatAddr);
+        //matProj.Print(FormatBuffer);
+        //LineCursor += screen.DrawText(0, LineCursor, FormatBuffer) + 1;
+
         LineCursor += screen.DrawText(0, ++LineCursor, ControlsText);
 
         if (FreeCam::GetState())
             HandleFreeCam(matFreeCam, matAddr);
+
+        //LineCursor += screen.DrawText(0, LineCursor, "-=-=-= VIEW MATRIX =-=-=-");
+        //
+        //matFreeCam.Print(FormatBuffer);
+        //LineCursor += screen.DrawText(0, LineCursor, FormatBuffer) + 1;
+
 
         screen.Render();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

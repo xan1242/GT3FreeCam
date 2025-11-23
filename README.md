@@ -23,6 +23,7 @@ NOTE 3: If you want to disable the UI or disable car rendering, you can use the 
 - Turbo/Super Turbo: Left Shift / F
 - Tilt Counter-clockwise: U
 - Tilt Clockwise: O
+- Reset All Rotations: R
 
 ### Controller
 NOTE: This currently only works on XInput. You need to have a controller connected to port 2.
@@ -36,6 +37,7 @@ Controls are similar to Black Box's debug camera controls.
 - Turbo/Super Turbo: LB/RB
 - Tilt Counter-clockwise: Start + LT
 - Tilt Clockwise: Start + RT
+- Reset All Rotations: Start + B
 
 ## LIMITATIONS
 - This tool currently only modifies the view matrix with no information on the world matrix. In other words, the tool doesn't know the directions of anything within the world.
